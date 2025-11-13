@@ -74,6 +74,7 @@ You will be prompted for:
 
     In a terminal/powershell window inside vscode run:
 
+    source venv/bin/activate
     python3 app.py
 
 
