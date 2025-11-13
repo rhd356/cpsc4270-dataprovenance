@@ -1,0 +1,29 @@
+# Core framework
+fastapi
+uvicorn[standard]
+
+# Database + ORM
+mysql-connector-python
+SQLAlchemy
+alembic
+
+# Environment variables
+python-dotenv
+
+# Data validation / models
+pydantic
+pydantic-settings
+
+# Security + hashing + encryption
+cryptography
+passlib[bcrypt]
+
+# Logging / monitoring
+loguru
+
+# Utility libraries
+requests
+python-dateutil
+
+# Optional (for CORS if building a frontend)
+fastapi[all]
