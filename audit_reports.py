@@ -1,0 +1,103 @@
+# audit_reports.py
+from tabulate import tabulate
+from rich import print
+
+from database import get_conn
+
+
+def get_salary_changes_last_month():
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT
+                audit_id,
+                row_id      AS employee_id,
+                old_value   AS old_salary,
+                new_value   AS new_salary,
+                changed_by,
+                changed_role,
+                changed_at
+            FROM audit_log
+            WHERE table_name = 'employees'
+              AND column_name = 'salary'
+              AND changed_at >= NOW() - INTERVAL 1 MONTH
+            ORDER BY changed_at DESC;
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def get_changes_in_range(start_ts: str, end_ts: str):
+    """
+    Get all changes between start_ts and end_ts (strings like '2025-10-01 00:00:00').
+    """
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT *
+            FROM audit_log
+            WHERE changed_at BETWEEN %s AND %s
+            ORDER BY changed_at;
+            """,
+            (start_ts, end_ts),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_salary_changes_last_month():
+    rows = get_salary_changes_last_month()
+    if not rows:
+        print("[yellow]No salary changes in the last month.[/yellow]")
+        return
+
+    table = [
+        [
+            r["audit_id"],
+            r["employee_id"],
+            r["old_salary"],
+            r["new_salary"],
+            r["changed_by"],
+            r["changed_role"],
+            r["changed_at"],
+        ]
+        for r in rows
+    ]
+    headers = ["Audit ID", "Employee ID", "Old Salary", "New Salary",
+               "Changed By", "Role", "Changed At"]
+    print("[bold cyan]Salary changes in the last month:[/bold cyan]")
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
+def print_changes_in_range(start_ts: str, end_ts: str):
+    rows = get_changes_in_range(start_ts, end_ts)
+    if not rows:
+        print(f"[yellow]No changes between {start_ts} and {end_ts}.[/yellow]")
+        return
+
+    table = [
+        [
+            r["audit_id"],
+            r["table_name"],
+            r["row_id"],
+            r["column_name"],
+            r["old_value"],
+            r["new_value"],
+            r["changed_by"],
+            r["changed_role"],
+            r["changed_at"],
+        ]
+        for r in rows
+    ]
+    headers = [
+        "Audit ID", "Table", "Row ID", "Column",
+        "Old Value", "New Value", "Changed By",
+        "Role", "Changed At",
+    ]
+    print(f"[bold cyan]Changes between {start_ts} and {end_ts}:[/bold cyan]")
+    print(tabulate(table, headers=headers, tablefmt="grid"))

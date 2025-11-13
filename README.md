@@ -7,7 +7,7 @@ Create a python virtual environment:
 
 Activate virtual environment:
 
-    source myenv/bin/activate
+    source venv/bin/activate
 
 Install requirements.txt to virtual environment:
 
