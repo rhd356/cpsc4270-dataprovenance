@@ -1,6 +1,6 @@
 -- Create database
-CREATE DATABASE IF NOT EXISTS securitydb;
-USE securitydb;
+CREATE DATABASE IF NOT EXISTS dataprovenance_db;
+USE dataprovenance_db;
 
 -- Main table: employees
 DROP TABLE IF EXISTS audit_log;
