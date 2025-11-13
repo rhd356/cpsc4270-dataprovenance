@@ -28,6 +28,14 @@ If PowerShell says it cannot run scripts, use:
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Linux:
+If running on linux, you may have to first run the following for the script to play nice:
+
+sudo mysql
+SET GLOBAL validate_password.policy = LOW;
+SET GLOBAL validate_password.length = 6;
+EXIT;
+
+Make script runnable:
 
 chmod +x setup_linux.sh
 ./setup_linux.sh
