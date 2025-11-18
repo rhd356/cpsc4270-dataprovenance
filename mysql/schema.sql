@@ -28,16 +28,16 @@ CREATE TABLE audit_log (
     changed_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Trigger to log salary changes on employees
+-- Trigger to log changes to sensitive fields on employees
 DELIMITER $$
 
-DROP TRIGGER IF EXISTS trg_employees_salary_audit$$
+DROP TRIGGER IF EXISTS trg_employees_audit$$
 
-CREATE TRIGGER trg_employees_salary_audit
+CREATE TRIGGER trg_employees_audit
 BEFORE UPDATE ON employees
 FOR EACH ROW
 BEGIN
-    -- Only log if salary actually changed
+    -- Log salary changes
     IF NOT (NEW.salary <=> OLD.salary) THEN
         INSERT INTO audit_log (
             table_name,
@@ -54,6 +54,52 @@ BEGIN
             'salary',
             OLD.salary,
             NEW.salary,
+            COALESCE(@app_current_user, CURRENT_USER()),
+            @app_current_role,
+            NOW()
+        );
+    END IF;
+
+    -- Log name changes
+    IF NOT (NEW.full_name <=> OLD.full_name) THEN
+        INSERT INTO audit_log (
+            table_name,
+            row_id,
+            column_name,
+            old_value,
+            new_value,
+            changed_by,
+            changed_role,
+            changed_at
+        ) VALUES (
+            'employees',
+            OLD.employee_id,
+            'full_name',
+            OLD.full_name,
+            NEW.full_name,
+            COALESCE(@app_current_user, CURRENT_USER()),
+            @app_current_role,
+            NOW()
+        );
+    END IF;
+
+    -- Log department changes
+    IF NOT (NEW.department <=> OLD.department) THEN
+        INSERT INTO audit_log (
+            table_name,
+            row_id,
+            column_name,
+            old_value,
+            new_value,
+            changed_by,
+            changed_role,
+            changed_at
+        ) VALUES (
+            'employees',
+            OLD.employee_id,
+            'department',
+            OLD.department,
+            NEW.department,
             COALESCE(@app_current_user, CURRENT_USER()),
             @app_current_role,
             NOW()
