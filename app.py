@@ -3,12 +3,12 @@ from tabulate import tabulate
 from rich import print
 
 from database import get_conn, set_app_identity
-from audit_reports import (
+from audit import (
     print_salary_changes_last_month,
     print_changes_in_range,
 )
 
-
+# List all employees and their details
 def list_employees():
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)

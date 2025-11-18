@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-
-# setup_linux.sh
 # Setup script for the Data Provenance project on Linux/macOS (auth_socket-friendly)
 
 set -e  # exit on first error
 
 DB_NAME="dataprovenance_db"
-DB_USER="admin"
-DB_PASS="d@taprovenance123!"
+DB_USER="dpuser"
+DB_PASS="D@taProvenance123!"
 SCHEMA_PATH="mysql/schema.sql"
 
 echo "=== Data Provenance Project Setup (Linux/macOS) ==="
@@ -18,7 +16,6 @@ echo ">>> Creating Python virtual environment..."
 python3 -m venv venv
 
 echo ">>> Activating virtual environment..."
-# shellcheck disable=SC1091
 source venv/bin/activate
 
 # 2) Install Python dependencies
@@ -27,9 +24,9 @@ echo ">>> Installing Python dependencies from requirements.txt..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 3) MySQL setup using auth_socket (sudo mysql, no password)
+# 3) MySQL setup using sudo mysql
 echo
-echo ">>> Setting up MySQL database and user via sudo mysql (auth_socket)..."
+echo ">>> Setting up MySQL database and user via sudo mysql..."
 
 sudo mysql <<EOF
 CREATE DATABASE IF NOT EXISTS ${DB_NAME};
@@ -39,10 +36,10 @@ SET GLOBAL log_bin_trust_function_creators = 1;
 FLUSH PRIVILEGES;
 EOF
 
-# 4) Load schema as admin (this will prompt for admin password: dataprovenance)
+# 4) Load schema as dpuser
 echo
-echo ">>> Loading schema from ${SCHEMA_PATH} using admin user..."
-mysql -u "${DB_USER}" -p "${DB_NAME}" < "${SCHEMA_PATH}"
+echo ">>> Loading schema from ${SCHEMA_PATH} using ${DB_USER}..."
+mysql -u "${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" < "${SCHEMA_PATH}"
 
 # 5) Create .env file if it doesn't exist
 echo

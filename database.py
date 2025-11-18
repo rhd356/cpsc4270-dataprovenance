@@ -7,17 +7,18 @@ from rich import print
 
 load_dotenv()  # Load .env file
 
-
+# db creds
 def get_db_config():
     return {
         "host": os.getenv("DB_HOST", "localhost"),
         "port": int(os.getenv("DB_PORT", "3306")),
         "user": os.getenv("DB_USER", "admin"),
-        "password": os.getenv("DB_PASS", "dataprovenance"),
+        "password": os.getenv("DB_PASS", "D@ataProvenance123!"),
         "database": os.getenv("DB_NAME", "dataprovenance_db"),
     }
 
 
+# Starts and ends db connection
 @contextmanager
 def get_conn():
     config = get_db_config()

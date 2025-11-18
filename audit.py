@@ -1,4 +1,4 @@
-# audit_reports.py
+# Auditing functions
 from tabulate import tabulate
 from rich import print
 
@@ -30,9 +30,9 @@ def get_salary_changes_last_month():
         return rows
 
 
-def get_changes_in_range(start_ts: str, end_ts: str):
+def get_changes_in_range(start_time: str, end_time: str):
     """
-    Get all changes between start_ts and end_ts (strings like '2025-10-01 00:00:00').
+    Get all changes between start_time and end_time (strings like '2025-10-01 00:00:00').
     """
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
@@ -43,7 +43,7 @@ def get_changes_in_range(start_ts: str, end_ts: str):
             WHERE changed_at BETWEEN %s AND %s
             ORDER BY changed_at;
             """,
-            (start_ts, end_ts),
+            (start_time, end_time),
         )
         rows = cur.fetchall()
         cur.close()
@@ -74,10 +74,10 @@ def print_salary_changes_last_month():
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
-def print_changes_in_range(start_ts: str, end_ts: str):
-    rows = get_changes_in_range(start_ts, end_ts)
+def print_changes_in_range(start_time: str, end_time: str):
+    rows = get_changes_in_range(start_time, end_time)
     if not rows:
-        print(f"[yellow]No changes between {start_ts} and {end_ts}.[/yellow]")
+        print(f"[yellow]No changes between {start_time} and {end_time}.[/yellow]")
         return
 
     table = [
@@ -99,5 +99,5 @@ def print_changes_in_range(start_ts: str, end_ts: str):
         "Old Value", "New Value", "Changed By",
         "Role", "Changed At",
     ]
-    print(f"[bold cyan]Changes between {start_ts} and {end_ts}:[/bold cyan]")
+    print(f"[bold cyan]Changes between {start_time} and {end_time}:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
