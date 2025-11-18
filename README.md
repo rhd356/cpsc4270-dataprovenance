@@ -60,22 +60,12 @@ You will be prompted for:
 
     The admin user password (dataprovenance)
 
-
-# Setup verification:
-
-    1. mysql -u admin -p
-    2. Enter password (dataprovenance)
-    3. Run each command separately
-        USE dataprovenance_db;
-        SHOW TABLES;
-        SELECT * FROM employees;
-
-# Running python app:
+# Running python app post setup:
 
     In a terminal/powershell window inside vscode run:
 
-    source venv/bin/activate
-    python3 app.py
+    source venv/bin/activate --> for linux or .\venv\Scripts\Activate.ps1 for Windows
+    python3 app.py or python app.py --> depending on python version
 
 
 
