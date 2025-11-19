@@ -97,4 +97,4 @@ DB_NAME=$DB_NAME
 
 Write-Host "`n=== Setup complete! ==="
 Write-Host "To activate the virtual environment in the future: .\venv\Scripts\Activate.ps1"
-Write-Host "Then run the app with: python app.py"
+Write-Host "Then run the app with: python main.py"

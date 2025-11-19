@@ -199,3 +199,174 @@ def print_department_changes_last_month():
                "Changed By", "Role", "Changed At"]
     print("[bold cyan]Department changes in the last month:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
+# ===== NEW FEATURES =====
+
+def trace_field_history(employee_id: int, field_name: str):
+    """
+    Shows the complete provenance chain for a specific field of an employee.
+    Traces all changes from the initial value to the current value.
+    """
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT
+                audit_id,
+                old_value,
+                new_value,
+                changed_by,
+                changed_role,
+                justification,
+                changed_at
+            FROM audit_log
+            WHERE table_name = 'employees'
+              AND row_id = %s
+              AND column_name = %s
+            ORDER BY changed_at ASC;
+            """,
+            (employee_id, field_name),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_field_history(employee_id: int, field_name: str):
+    """
+    Displays the complete history/provenance chain for a specific field.
+    """
+    rows = trace_field_history(employee_id, field_name)
+    if not rows:
+        print(f"[yellow]No change history found for employee {employee_id}'s {field_name}.[/yellow]")
+        return
+
+    # Get current value
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(f"SELECT {field_name} FROM employees WHERE employee_id = %s;", (employee_id,))
+        current_row = cur.fetchone()
+        cur.close()
+        current_value = current_row[field_name] if current_row else "N/A"
+
+    print(f"[bold cyan]Complete Provenance Chain for Employee {employee_id} - {field_name}:[/bold cyan]")
+    print(f"[bold green]Current Value:[/bold green] {current_value}\n")
+
+    table = [
+        [
+            r["audit_id"],
+            r["old_value"],
+            r["new_value"],
+            r["changed_by"],
+            r["changed_role"] or "N/A",
+            r["justification"] or "N/A",
+            r["changed_at"],
+        ]
+        for r in rows
+    ]
+    headers = ["Audit ID", "Old Value", "New Value", "Changed By",
+               "Role", "Justification", "Changed At"]
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
+def get_changes_by_user(username: str):
+    """
+    Get all changes made by a specific user.
+    """
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT *
+            FROM audit_log
+            WHERE changed_by = %s
+            ORDER BY changed_at DESC;
+            """,
+            (username,)
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_changes_by_user(username: str):
+    """
+    Display all changes made by a specific user.
+    """
+    rows = get_changes_by_user(username)
+    if not rows:
+        print(f"[yellow]No changes found for user '{username}'.[/yellow]")
+        return
+
+    table = [
+        [
+            r["audit_id"],
+            r["table_name"],
+            r["row_id"],
+            r["column_name"],
+            r["old_value"],
+            r["new_value"],
+            r["changed_role"] or "N/A",
+            r["justification"] or "N/A",
+            r["changed_at"],
+        ]
+        for r in rows
+    ]
+    headers = [
+        "Audit ID", "Table", "Row ID", "Column",
+        "Old Value", "New Value", "Role", "Justification", "Changed At"
+    ]
+    print(f"[bold cyan]All changes by user '{username}':[/bold cyan]")
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
+def get_changes_by_role(role: str):
+    """
+    Get all changes made by users with a specific role.
+    """
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT *
+            FROM audit_log
+            WHERE changed_role = %s
+            ORDER BY changed_at DESC;
+            """,
+            (role,)
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_changes_by_role(role: str):
+    """
+    Display all changes made by users with a specific role.
+    """
+    rows = get_changes_by_role(role)
+    if not rows:
+        print(f"[yellow]No changes found for role '{role}'.[/yellow]")
+        return
+
+    table = [
+        [
+            r["audit_id"],
+            r["table_name"],
+            r["row_id"],
+            r["column_name"],
+            r["old_value"],
+            r["new_value"],
+            r["changed_by"],
+            r["justification"] or "N/A",
+            r["changed_at"],
+        ]
+        for r in rows
+    ]
+    headers = [
+        "Audit ID", "Table", "Row ID", "Column",
+        "Old Value", "New Value", "Changed By", "Justification", "Changed At"
+    ]
+    print(f"[bold cyan]All changes by role '{role}':[/bold cyan]")
+    print(tabulate(table, headers=headers, tablefmt="grid"))

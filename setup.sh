@@ -60,4 +60,4 @@ fi
 echo
 echo "=== Setup complete! ==="
 echo "To activate the virtual environment later, run: source venv/bin/activate"
-echo "Then start the app with: python app.py"
+echo "Then start the app with: python main.py"

@@ -29,11 +29,12 @@ def get_conn():
         conn.close()
 
 
-def set_app_identity(cursor, username: str, role: str | None):
+def set_app_identity(cursor, username: str, role: str | None, justification: str | None = None):
     """
     Set session variables used by the MySQL trigger to know who is making changes.
     Must be called on the same connection before UPDATE statements.
     """
     cursor.execute("SET @app_current_user = %s;", (username,))
     cursor.execute("SET @app_current_role = %s;", (role,))
+    cursor.execute("SET @app_justification = %s;", (justification,))
     print(f"[green]Session identity set:[/green] user={username}, role={role}")
