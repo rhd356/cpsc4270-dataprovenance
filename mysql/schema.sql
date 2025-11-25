@@ -21,7 +21,7 @@ CREATE TABLE audit_log (
     audit_id      INT AUTO_INCREMENT PRIMARY KEY,
     table_name    VARCHAR(64) NOT NULL,
     row_id        INT NOT NULL,            -- maps to employees.employee_id
-    column_name   VARCHAR(64) NOT NULL,    -- e.g., 'salary'
+    column_name   VARCHAR(64) NOT NULL,    -- ex: 'salary'
     old_value     TEXT,
     new_value     TEXT,
     changed_by    VARCHAR(255) NOT NULL,   -- username

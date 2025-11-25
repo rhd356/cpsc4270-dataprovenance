@@ -38,3 +38,20 @@ def set_app_identity(cursor, username: str, role: str | None, justification: str
     cursor.execute("SET @app_current_role = %s;", (role,))
     cursor.execute("SET @app_justification = %s;", (justification,))
     print(f"[green]Session identity set:[/green] user={username}, role={role}")
+
+
+def validate_user_role(cursor, username: str, role: str) -> bool:
+    """
+    Validates that the given username exists in the employees table with the specified role.
+    Returns True if the user has the role, False otherwise.
+    """
+    cursor.execute(
+        """
+        SELECT COUNT(*) as count
+        FROM employees
+        WHERE full_name = %s AND role = %s;
+        """,
+        (username, role)
+    )
+    result = cursor.fetchone()
+    return result[0] > 0 if result else False

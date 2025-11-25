@@ -201,8 +201,6 @@ def print_department_changes_last_month():
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
-# ===== NEW FEATURES =====
-
 def trace_field_history(employee_id: int, field_name: str):
     """
     Shows the complete provenance chain for a specific field of an employee.
@@ -321,6 +319,69 @@ def print_changes_by_user(username: str):
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
+def get_all_changes_organized_by_user():
+    """
+    Get all changes from audit log organized by user.
+    """
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT *
+            FROM audit_log
+            ORDER BY changed_by, changed_at DESC;
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_all_changes_by_user():
+    """
+    Display all changes organized by user.
+    """
+    rows = get_all_changes_organized_by_user()
+    if not rows:
+        print("[yellow]No changes found in audit log.[/yellow]")
+        return
+
+    # Group changes by user
+    from collections import defaultdict
+    changes_by_user = defaultdict(list)
+
+    for row in rows:
+        username = row["changed_by"] or "Unknown/No User"
+        changes_by_user[username].append(row)
+
+    # Display changes for each user
+    print("[bold cyan]All Changes Organized by User:[/bold cyan]\n")
+
+    for username in sorted(changes_by_user.keys()):
+        user_changes = changes_by_user[username]
+        print(f"\n[bold magenta]User: {username}[/bold magenta] ([green]{len(user_changes)} change(s)[/green])")
+
+        table = [
+            [
+                r["audit_id"],
+                r["table_name"],
+                r["row_id"],
+                r["column_name"],
+                r["old_value"],
+                r["new_value"],
+                r["changed_role"] or "N/A",
+                r["justification"] or "N/A",
+                r["changed_at"],
+            ]
+            for r in user_changes
+        ]
+        headers = [
+            "Audit ID", "Table", "Row ID", "Column",
+            "Old Value", "New Value", "Role", "Justification", "Changed At"
+        ]
+        print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
 def get_changes_by_role(role: str):
     """
     Get all changes made by users with a specific role.
@@ -370,3 +431,66 @@ def print_changes_by_role(role: str):
     ]
     print(f"[bold cyan]All changes by role '{role}':[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
+def get_all_changes_organized_by_role():
+    """
+    Get all changes from audit log organized by role.
+    """
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT *
+            FROM audit_log
+            ORDER BY changed_role, changed_at DESC;
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_all_changes_by_role():
+    """
+    Display all changes organized by role.
+    """
+    rows = get_all_changes_organized_by_role()
+    if not rows:
+        print("[yellow]No changes found in audit log.[/yellow]")
+        return
+
+    # Group changes by role
+    from collections import defaultdict
+    changes_by_role = defaultdict(list)
+
+    for row in rows:
+        role = row["changed_role"] or "Unknown/No Role"
+        changes_by_role[role].append(row)
+
+    # Display changes for each role
+    print("[bold cyan]All Changes Organized by Role:[/bold cyan]\n")
+
+    for role in sorted(changes_by_role.keys()):
+        role_changes = changes_by_role[role]
+        print(f"\n[bold magenta]Role: {role}[/bold magenta] ([green]{len(role_changes)} change(s)[/green])")
+
+        table = [
+            [
+                r["audit_id"],
+                r["table_name"],
+                r["row_id"],
+                r["column_name"],
+                r["old_value"],
+                r["new_value"],
+                r["changed_by"],
+                r["justification"] or "N/A",
+                r["changed_at"],
+            ]
+            for r in role_changes
+        ]
+        headers = [
+            "Audit ID", "Table", "Row ID", "Column",
+            "Old Value", "New Value", "Changed By", "Justification", "Changed At"
+        ]
+        print(tabulate(table, headers=headers, tablefmt="grid"))

@@ -2,16 +2,49 @@
 from tabulate import tabulate
 from rich import print
 
-from database import get_conn, set_app_identity
+from database import get_conn, set_app_identity, validate_user_role
 from audit import (
     print_salary_changes_last_month,
     print_name_changes_last_month,
     print_department_changes_last_month,
     print_changes_in_range,
     print_field_history,
-    print_changes_by_user,
-    print_changes_by_role,
+    print_all_changes_by_user,
+    print_all_changes_by_role,
 )
+
+# Authorized roles that can make changes
+AUTHORIZED_ROLES = [
+    "HR Manager",
+    "System Administrator",
+    "Sales Manager",
+    "CFO",
+    "CIO",
+    "CLO",
+    "Customer Service Manager"
+]
+
+
+def select_authorized_role():
+    """
+    Prompts the user to select their role from the authorized list.
+    Returns the selected role or None if the selection is invalid.
+    """
+    print("\n[bold cyan]Select your role:[/bold cyan]")
+    for idx, role in enumerate(AUTHORIZED_ROLES, 1):
+        print(f"  {idx}) {role}")
+
+    try:
+        choice = int(input("\nEnter the number of your role: ").strip())
+        if 1 <= choice <= len(AUTHORIZED_ROLES):
+            return AUTHORIZED_ROLES[choice - 1]
+        else:
+            print("[red]Invalid selection. Please choose a number from the list.[/red]")
+            return None
+    except ValueError:
+        print("[red]Invalid input. Please enter a number.[/red]")
+        return None
+
 
 # List all employees and their details
 def list_employees():
@@ -50,7 +83,20 @@ def update_salary():
         return
 
     username = input("Enter your username (for audit log): ").strip()
-    role = input("Enter your role (e.g., HR_Manager): ").strip() or None
+    role = select_authorized_role()
+    if role is None:
+        print("[red]Update cancelled due to invalid role selection.[/red]")
+        return
+
+    # Validate that the username has the selected role
+    with get_conn() as conn:
+        cur = conn.cursor()
+        if not validate_user_role(cur, username, role):
+            print(f"[red]Authorization failed: User '{username}' does not have the role '{role}'.[/red]")
+            cur.close()
+            return
+        cur.close()
+
     justification = input("Enter justification for this change: ").strip() or None
 
     with get_conn() as conn:
@@ -99,7 +145,20 @@ def update_name():
         return
 
     username = input("Enter your username (for audit log): ").strip()
-    role = input("Enter your role (e.g., HR_Manager): ").strip() or None
+    role = select_authorized_role()
+    if role is None:
+        print("[red]Update cancelled due to invalid role selection.[/red]")
+        return
+
+    # Validate that the username has the selected role
+    with get_conn() as conn:
+        cur = conn.cursor()
+        if not validate_user_role(cur, username, role):
+            print(f"[red]Authorization failed: User '{username}' does not have the role '{role}'.[/red]")
+            cur.close()
+            return
+        cur.close()
+
     justification = input("Enter justification for this change: ").strip() or None
 
     with get_conn() as conn:
@@ -148,7 +207,20 @@ def update_department():
         return
 
     username = input("Enter your username (for audit log): ").strip()
-    role = input("Enter your role (e.g., HR_Manager): ").strip() or None
+    role = select_authorized_role()
+    if role is None:
+        print("[red]Update cancelled due to invalid role selection.[/red]")
+        return
+
+    # Validate that the username has the selected role
+    with get_conn() as conn:
+        cur = conn.cursor()
+        if not validate_user_role(cur, username, role):
+            print(f"[red]Authorization failed: User '{username}' does not have the role '{role}'.[/red]")
+            cur.close()
+            return
+        cur.close()
+
     justification = input("Enter justification for this change: ").strip() or None
 
     with get_conn() as conn:
@@ -207,7 +279,20 @@ def update_role():
         return
 
     username = input("Enter your username (for audit log): ").strip()
-    role = input("Enter your role (e.g., HR_Manager): ").strip() or None
+    role = select_authorized_role()
+    if role is None:
+        print("[red]Update cancelled due to invalid role selection.[/red]")
+        return
+
+    # Validate that the username has the selected role
+    with get_conn() as conn:
+        cur = conn.cursor()
+        if not validate_user_role(cur, username, role):
+            print(f"[red]Authorization failed: User '{username}' does not have the role '{role}'.[/red]")
+            cur.close()
+            return
+        cur.close()
+
     justification = input("Enter justification for this change: ").strip() or None
 
     with get_conn() as conn:
@@ -257,9 +342,9 @@ def show_menu():
     print("  7) Show name changes in the last month")
     print("  8) Show department changes in the last month")
     print("  9) Show all changes in a date range")
-    print("  [bold cyan]10) Trace field history (provenance chain)[/bold cyan]")
-    print("  [bold cyan]11) Show changes by user[/bold cyan]")
-    print("  [bold cyan]12) Show changes by role[/bold cyan]")
+    print("  10) Trace field history")
+    print("  11) Show all changes organized by user")
+    print("  12) Show all changes organized by role")
     print("  13) Exit")
 
 
@@ -297,11 +382,9 @@ def main():
             except ValueError:
                 print("[red]Invalid employee ID.[/red]")
         elif choice == "11":
-            username = input("Enter username to search: ").strip()
-            print_changes_by_user(username)
+            print_all_changes_by_user()
         elif choice == "12":
-            role = input("Enter role to search: ").strip()
-            print_changes_by_role(role)
+            print_all_changes_by_role()
         elif choice == "13":
             print("[bold green]Goodbye![/bold green]")
             break
