@@ -266,6 +266,79 @@ def print_field_history(employee_id: int, field_name: str):
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
+def get_all_changes_for_employee(employee_id: int):
+    """
+    Get all changes made to a specific employee across all fields.
+    """
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT
+                audit_id,
+                column_name,
+                old_value,
+                new_value,
+                changed_by,
+                changed_role,
+                justification,
+                changed_at
+            FROM audit_log
+            WHERE table_name = 'employees'
+              AND row_id = %s
+            ORDER BY changed_at ASC;
+            """,
+            (employee_id,)
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_all_changes_for_employee(employee_id: int):
+    """
+    Display all changes made to a specific employee across all fields.
+    """
+    rows = get_all_changes_for_employee(employee_id)
+    if not rows:
+        print(f"[yellow]No change history found for employee {employee_id}.[/yellow]")
+        return
+
+    # Get current employee info
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            "SELECT employee_id, full_name, department, role, salary FROM employees WHERE employee_id = %s;",
+            (employee_id,)
+        )
+        current_row = cur.fetchone()
+        cur.close()
+
+    if current_row:
+        print(f"[bold cyan]Complete Change History for Employee {employee_id}:[/bold cyan]")
+        print(f"[bold green]Current Info:[/bold green] {current_row['full_name']} | {current_row['department']} | {current_row['role']} | ${current_row['salary']}\n")
+    else:
+        print(f"[bold cyan]Complete Change History for Employee {employee_id}:[/bold cyan]")
+        print(f"[yellow]Employee not found in current records.[/yellow]\n")
+
+    table = [
+        [
+            r["audit_id"],
+            r["column_name"],
+            r["old_value"],
+            r["new_value"],
+            r["changed_by"],
+            r["changed_role"] or "N/A",
+            r["justification"] or "N/A",
+            r["changed_at"],
+        ]
+        for r in rows
+    ]
+    headers = ["Audit ID", "Field", "Old Value", "New Value", "Changed By",
+               "Role", "Justification", "Changed At"]
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
     """
     Get all changes made by a specific user.
     """

@@ -10,6 +10,7 @@ from audit import (
     print_department_changes_last_month,
     print_changes_in_range,
     print_field_history,
+    print_all_changes_for_employee,
     print_all_changes_by_user,
     print_all_changes_by_role,
 )
@@ -485,9 +486,19 @@ def main():
         elif choice == "10":
             try:
                 employee_id = int(input("Enter employee ID: ").strip())
-                print("Field options: salary, full_name, department, role")
-                field_name = input("Enter field name: ").strip()
-                print_field_history(employee_id, field_name)
+                print("\n[bold cyan]Select trace option:[/bold cyan]")
+                print("  1) Show all changes for this employee")
+                print("  2) Show changes for a specific field")
+                trace_choice = input("\nEnter your choice (1-2): ").strip()
+
+                if trace_choice == "1":
+                    print_all_changes_for_employee(employee_id)
+                elif trace_choice == "2":
+                    print("Field options: salary, full_name, department, role")
+                    field_name = input("Enter field name: ").strip()
+                    print_field_history(employee_id, field_name)
+                else:
+                    print("[red]Invalid option. Please enter 1 or 2.[/red]")
             except ValueError:
                 print("[red]Invalid employee ID.[/red]")
         elif choice == "11":
