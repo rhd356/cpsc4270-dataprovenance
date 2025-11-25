@@ -199,10 +199,10 @@ def print_department_changes_last_month():
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
-    """
+"""
     Shows the complete provenance chain for a specific field of an employee.
     Traces all changes from the initial value to the current value.
-    """
+"""
 def trace_field_history(employee_id: int, field_name: str):
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
@@ -229,9 +229,9 @@ def trace_field_history(employee_id: int, field_name: str):
         return rows
 
 
-    """
+"""
     Displays the complete history/provenance chain for a specific field.
-    """
+"""
 def print_field_history(employee_id: int, field_name: str):
     rows = trace_field_history(employee_id, field_name)
     if not rows:
@@ -265,11 +265,10 @@ def print_field_history(employee_id: int, field_name: str):
                "Role", "Justification", "Changed At"]
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-
-def get_all_changes_for_employee(employee_id: int):
-    """
+"""
     Get all changes made to a specific employee across all fields.
-    """
+"""
+def get_all_changes_for_employee(employee_id: int):
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -294,11 +293,10 @@ def get_all_changes_for_employee(employee_id: int):
         cur.close()
         return rows
 
-
-def print_all_changes_for_employee(employee_id: int):
-    """
+"""
     Display all changes made to a specific employee across all fields.
-    """
+"""
+def print_all_changes_for_employee(employee_id: int):
     rows = get_all_changes_for_employee(employee_id)
     if not rows:
         print(f"[yellow]No change history found for employee {employee_id}.[/yellow]")
@@ -359,9 +357,9 @@ def get_changes_by_user(username: str):
         return rows
 
 
-    """
+"""
     Display all changes made by a specific user.
-    """
+"""
 def print_changes_by_user(username: str):
     rows = get_changes_by_user(username)
     if not rows:
@@ -389,11 +387,10 @@ def print_changes_by_user(username: str):
     print(f"[bold cyan]All changes by user '{username}':[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-
-def get_all_changes_organized_by_user():
-    """
+"""
     Get all changes from audit log organized by user.
-    """
+"""
+def get_all_changes_organized_by_user():
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -452,11 +449,10 @@ def print_all_changes_by_user():
         ]
         print(tabulate(table, headers=headers, tablefmt="grid"))
 
-
-def get_changes_by_role(role: str):
-    """
+"""
     Get all changes made by users with a specific role.
-    """
+"""
+def get_changes_by_role(role: str):
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -472,11 +468,10 @@ def get_changes_by_role(role: str):
         cur.close()
         return rows
 
-
-def print_changes_by_role(role: str):
-    """
+"""
     Display all changes made by users with a specific role.
-    """
+"""
+def print_changes_by_role(role: str):
     rows = get_changes_by_role(role)
     if not rows:
         print(f"[yellow]No changes found for role '{role}'.[/yellow]")
@@ -503,11 +498,10 @@ def print_changes_by_role(role: str):
     print(f"[bold cyan]All changes by role '{role}':[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-
-def get_all_changes_organized_by_role():
-    """
+"""
     Get all changes from audit log organized by role.
-    """
+"""
+def get_all_changes_organized_by_role():
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -521,11 +515,10 @@ def get_all_changes_organized_by_role():
         cur.close()
         return rows
 
-
-def print_all_changes_by_role():
-    """
+"""
     Display all changes organized by role.
-    """
+"""
+def print_all_changes_by_role():
     rows = get_all_changes_organized_by_role()
     if not rows:
         print("[yellow]No changes found in audit log.[/yellow]")

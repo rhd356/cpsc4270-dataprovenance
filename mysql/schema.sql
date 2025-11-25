@@ -25,7 +25,7 @@ CREATE TABLE audit_log (
     old_value     TEXT,
     new_value     TEXT,
     changed_by    VARCHAR(255) NOT NULL,   -- username
-    changed_role  VARCHAR(255) NULL,       -- e.g., 'HR_Manager'
+    changed_role  VARCHAR(255) NULL,       -- ex: 'HR_Manager'
     justification TEXT NULL,               -- reason for the change
     changed_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
