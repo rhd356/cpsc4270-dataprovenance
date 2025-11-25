@@ -7,7 +7,7 @@ from rich import print
 
 load_dotenv()  # Load .env file
 
-# db creds
+""" db creds """
 def get_db_config():
     return {
         "host": os.getenv("DB_HOST", "localhost"),
@@ -18,7 +18,7 @@ def get_db_config():
     }
 
 
-# Starts and ends db connection
+""" Starts and ends db connection """
 @contextmanager
 def get_conn():
     config = get_db_config()
@@ -28,23 +28,23 @@ def get_conn():
     finally:
         conn.close()
 
-
-def set_app_identity(cursor, username: str, role: str | None, justification: str | None = None):
-    """
+"""
     Set session variables used by the MySQL trigger to know who is making changes.
     Must be called on the same connection before UPDATE statements.
-    """
+"""
+def set_app_identity(cursor, username: str, role: str | None, justification: str | None = None):
+    
     cursor.execute("SET @app_current_user = %s;", (username,))
     cursor.execute("SET @app_current_role = %s;", (role,))
     cursor.execute("SET @app_justification = %s;", (justification,))
     print(f"[green]Session identity set:[/green] user={username}, role={role}")
 
 
-def validate_user_role(cursor, username: str, role: str) -> bool:
-    """
+"""
     Validates that the given username exists in the employees table with the specified role.
     Returns True if the user has the role, False otherwise.
-    """
+"""
+def validate_user_role(cursor, username: str, role: str) -> bool:
     cursor.execute(
         """
         SELECT COUNT(*) as count

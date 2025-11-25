@@ -4,7 +4,7 @@ from rich import print
 
 from database import get_conn
 
-
+""" Shows all salary changes in the last month """
 def get_salary_changes_last_month():
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
@@ -29,11 +29,9 @@ def get_salary_changes_last_month():
         cur.close()
         return rows
 
-
+""" Get all changes between start_time and end_time. """
 def get_changes_in_range(start_time: str, end_time: str):
-    """
-    Get all changes between start_time and end_time (strings like '2025-10-01 00:00:00').
-    """
+    
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -49,7 +47,7 @@ def get_changes_in_range(start_time: str, end_time: str):
         cur.close()
         return rows
 
-
+""" Shows all salary changes in the last month """
 def print_salary_changes_last_month():
     rows = get_salary_changes_last_month()
     if not rows:
@@ -73,7 +71,7 @@ def print_salary_changes_last_month():
     print("[bold cyan]Salary changes in the last month:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-
+""" Display all changes made in a specific time range """
 def print_changes_in_range(start_time: str, end_time: str):
     rows = get_changes_in_range(start_time, end_time)
     if not rows:
@@ -102,7 +100,7 @@ def print_changes_in_range(start_time: str, end_time: str):
     print(f"[bold cyan]Changes between {start_time} and {end_time}:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-
+""" Shows all name changes in the last month """
 def get_name_changes_last_month():
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
@@ -127,7 +125,7 @@ def get_name_changes_last_month():
         cur.close()
         return rows
 
-
+""" Shows all department changes in the last month """
 def get_department_changes_last_month():
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
@@ -152,7 +150,7 @@ def get_department_changes_last_month():
         cur.close()
         return rows
 
-
+""" Shows all name changes in the last month """
 def print_name_changes_last_month():
     rows = get_name_changes_last_month()
     if not rows:
@@ -201,11 +199,11 @@ def print_department_changes_last_month():
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
-def trace_field_history(employee_id: int, field_name: str):
     """
     Shows the complete provenance chain for a specific field of an employee.
     Traces all changes from the initial value to the current value.
     """
+def trace_field_history(employee_id: int, field_name: str):
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -231,10 +229,10 @@ def trace_field_history(employee_id: int, field_name: str):
         return rows
 
 
-def print_field_history(employee_id: int, field_name: str):
     """
     Displays the complete history/provenance chain for a specific field.
     """
+def print_field_history(employee_id: int, field_name: str):
     rows = trace_field_history(employee_id, field_name)
     if not rows:
         print(f"[yellow]No change history found for employee {employee_id}'s {field_name}.[/yellow]")
@@ -268,10 +266,10 @@ def print_field_history(employee_id: int, field_name: str):
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
-def get_changes_by_user(username: str):
     """
     Get all changes made by a specific user.
     """
+def get_changes_by_user(username: str):
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -288,10 +286,10 @@ def get_changes_by_user(username: str):
         return rows
 
 
-def print_changes_by_user(username: str):
     """
     Display all changes made by a specific user.
     """
+def print_changes_by_user(username: str):
     rows = get_changes_by_user(username)
     if not rows:
         print(f"[yellow]No changes found for user '{username}'.[/yellow]")
@@ -417,8 +415,8 @@ def print_changes_by_role(role: str):
             r["table_name"],
             r["row_id"],
             r["column_name"],
-            r["old_value"],
-            r["new_value"],
+            f"[white]{r['old_value']}[/white]" if r["column_name"] == "salary" else r["old_value"],
+            f"[white]{r['new_value']}[/white]" if r["column_name"] == "salary" else r["new_value"],
             r["changed_by"],
             r["justification"] or "N/A",
             r["changed_at"],

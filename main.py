@@ -1,4 +1,5 @@
 # Main application
+from datetime import datetime
 from tabulate import tabulate
 from rich import print
 
@@ -24,12 +25,11 @@ AUTHORIZED_ROLES = [
     "Customer Service Manager"
 ]
 
-
-def select_authorized_role():
-    """
+"""
     Prompts the user to select their role from the authorized list.
     Returns the selected role or None if the selection is invalid.
-    """
+"""
+def select_authorized_role():
     print("\n[bold cyan]Select your role:[/bold cyan]")
     for idx, role in enumerate(AUTHORIZED_ROLES, 1):
         print(f"  {idx}) {role}")
@@ -45,8 +45,97 @@ def select_authorized_role():
         print("[red]Invalid input. Please enter a number.[/red]")
         return None
 
+"""
+    Get list of unique departments from the database.
+"""
+def get_departments():
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT department FROM employees ORDER BY department;")
+        rows = cur.fetchall()
+        cur.close()
+        return [row[0] for row in rows]
 
-# List all employees and their details
+"""
+    Get list of unique roles for a specific department.
+"""
+def get_roles_by_department(department):
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT DISTINCT role FROM employees WHERE department = %s AND role IS NOT NULL ORDER BY role;",
+            (department,)
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return [row[0] for row in rows]
+
+"""
+    Prompts the user to select a department from the list of existing departments.
+    Returns the selected department or None if the selection is invalid.
+"""
+def select_department():
+    departments = get_departments()
+    if not departments:
+        print("[red]No departments found in the database.[/red]")
+        return None
+
+    print("\n[bold cyan]Select a department:[/bold cyan]")
+    for idx, dept in enumerate(departments, 1):
+        print(f"  {idx}) {dept}")
+
+    try:
+        choice = int(input("\nEnter the number of the department: ").strip())
+        if 1 <= choice <= len(departments):
+            return departments[choice - 1]
+        else:
+            print("[red]Invalid selection. Please choose a number from the list.[/red]")
+            return None
+    except ValueError:
+        print("[red]Invalid input. Please enter a number.[/red]")
+        return None
+
+"""
+    Prompts the user to select a role for the specified department.
+    Returns the selected role or None if the selection is invalid.
+"""
+def select_role_for_department(department):
+    roles = get_roles_by_department(department)
+    if not roles:
+        print(f"[red]No roles found for department '{department}'.[/red]")
+        return None
+
+    print(f"\n[bold cyan]Select a role for {department}:[/bold cyan]")
+    for idx, role in enumerate(roles, 1):
+        print(f"  {idx}) {role}")
+
+    try:
+        choice = int(input("\nEnter the number of the role: ").strip())
+        if 1 <= choice <= len(roles):
+            return roles[choice - 1]
+        else:
+            print("[red]Invalid selection. Please choose a number from the list.[/red]")
+            return None
+    except ValueError:
+        print("[red]Invalid input. Please enter a number.[/red]")
+        return None
+    
+"""
+    Parse timestamp from MM-DD-YYYY HH:MM format to YYYY-MM-DD HH:MM:SS format.
+    Returns the formatted string or None if invalid.
+    Makes it easier to enter a date and time for American users.
+"""
+def parse_timestamp(timestamp_str):
+    try:
+        # Parse the input format: MM-DD-YYYY HH:MM
+        dt = datetime.strptime(timestamp_str, "%m-%d-%Y %H:%M")
+        # Return in MySQL format: YYYY-MM-DD HH:MM:SS
+        return dt.strftime("%Y-%m-%d %H:%M:00")
+    except ValueError:
+        return None
+
+
+""" List all employees and their details"""
 def list_employees():
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
@@ -73,15 +162,8 @@ def list_employees():
     print("[bold magenta]Employees:[/bold magenta]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
-
+""" Update employee salary """
 def update_salary():
-    try:
-        employee_id = int(input("Enter employee ID to update: ").strip())
-        new_salary = float(input("Enter new salary: ").strip())
-    except ValueError:
-        print("[red]Invalid number entered.[/red]")
-        return
-
     username = input("Enter your username (for audit log): ").strip()
     role = select_authorized_role()
     if role is None:
@@ -96,6 +178,13 @@ def update_salary():
             cur.close()
             return
         cur.close()
+
+    try:
+        employee_id = int(input("Enter employee ID to update: ").strip())
+        new_salary = float(input("Enter new salary: ").strip())
+    except ValueError:
+        print("[red]Invalid number entered.[/red]")
+        return
 
     justification = input("Enter justification for this change: ").strip() or None
 
@@ -131,19 +220,8 @@ def update_salary():
 
     print(f"[green]Updated salary for employee {employee_id}: {old_salary} -> {new_salary}[/green]")
 
-
+""" Update employee name"""
 def update_name():
-    try:
-        employee_id = int(input("Enter employee ID to update: ").strip())
-    except ValueError:
-        print("[red]Invalid number entered.[/red]")
-        return
-
-    new_name = input("Enter new full name: ").strip()
-    if not new_name:
-        print("[red]Name cannot be empty.[/red]")
-        return
-
     username = input("Enter your username (for audit log): ").strip()
     role = select_authorized_role()
     if role is None:
@@ -158,6 +236,17 @@ def update_name():
             cur.close()
             return
         cur.close()
+
+    try:
+        employee_id = int(input("Enter employee ID to update: ").strip())
+    except ValueError:
+        print("[red]Invalid number entered.[/red]")
+        return
+
+    new_name = input("Enter new full name: ").strip()
+    if not new_name:
+        print("[red]Name cannot be empty.[/red]")
+        return
 
     justification = input("Enter justification for this change: ").strip() or None
 
@@ -193,19 +282,80 @@ def update_name():
 
     print(f"[green]Updated name for employee {employee_id}: {old_name} -> {new_name}[/green]")
 
-
+""" Update employee department and role """
 def update_department():
+    username = input("Enter your username (for audit log): ").strip()
+    auth_role = select_authorized_role()
+    if auth_role is None:
+        print("[red]Update cancelled due to invalid role selection.[/red]")
+        return
+
+    # Validate that the username has the selected role
+    with get_conn() as conn:
+        cur = conn.cursor()
+        if not validate_user_role(cur, username, auth_role):
+            print(f"[red]Authorization failed: User '{username}' does not have the role '{auth_role}'.[/red]")
+            cur.close()
+            return
+        cur.close()
+
     try:
         employee_id = int(input("Enter employee ID to update: ").strip())
     except ValueError:
         print("[red]Invalid number entered.[/red]")
         return
 
-    new_department = input("Enter new department: ").strip()
-    if not new_department:
-        print("[red]Department cannot be empty.[/red]")
+    # Select new department from list
+    new_department = select_department()
+    if new_department is None:
+        print("[red]Update cancelled due to invalid department selection.[/red]")
         return
 
+    # Select new role for the chosen department
+    new_role = select_role_for_department(new_department)
+    if new_role is None:
+        print("[red]Update cancelled due to invalid role selection.[/red]")
+        return
+
+    justification = input("Enter justification for this change: ").strip() or None
+
+    with get_conn() as conn:
+        cur = conn.cursor()
+
+        # Set session identity for trigger
+        set_app_identity(cur, username, auth_role, justification)
+
+        # Show old department and role first
+        cur.execute("SELECT department, role FROM employees WHERE employee_id = %s;", (employee_id,))
+        row = cur.fetchone()
+        if not row:
+            print(f"[red]Employee with ID {employee_id} not found.[/red]")
+            cur.close()
+            return
+
+        old_department = row[0]
+        old_role = row[1]
+        print(f"Old department: {old_department}, Old role: {old_role}")
+
+        # Perform the update (trigger will log both changes to audit_log)
+        cur.execute(
+            """
+            UPDATE employees
+            SET department = %s, role = %s
+            WHERE employee_id = %s;
+            """,
+            (new_department, new_role, employee_id),
+        )
+
+        conn.commit()
+        cur.close()
+
+    print(f"[green]Updated employee {employee_id}:[/green]")
+    print(f"  Department: {old_department} -> {new_department}")
+    print(f"  Role: {old_role} -> {new_role}")
+
+""" Update employee role """
+def update_role():
     username = input("Enter your username (for audit log): ").strip()
     role = select_authorized_role()
     if role is None:
@@ -221,42 +371,6 @@ def update_department():
             return
         cur.close()
 
-    justification = input("Enter justification for this change: ").strip() or None
-
-    with get_conn() as conn:
-        cur = conn.cursor()
-
-        # Set session identity for trigger
-        set_app_identity(cur, username, role, justification)
-
-        # Show old department first
-        cur.execute("SELECT department FROM employees WHERE employee_id = %s;", (employee_id,))
-        row = cur.fetchone()
-        if not row:
-            print(f"[red]Employee with ID {employee_id} not found.[/red]")
-            cur.close()
-            return
-
-        old_department = row[0]
-        print(f"Old department: {old_department}")
-
-        # Perform the update (trigger will log to audit_log)
-        cur.execute(
-            """
-            UPDATE employees
-            SET department = %s
-            WHERE employee_id = %s;
-            """,
-            (new_department, employee_id),
-        )
-
-        conn.commit()
-        cur.close()
-
-    print(f"[green]Updated department for employee {employee_id}: {old_department} -> {new_department}[/green]")
-
-
-def update_role():
     try:
         employee_id = int(input("Enter employee ID to update: ").strip())
     except ValueError:
@@ -277,21 +391,6 @@ def update_role():
     if not new_role:
         print("[red]Role cannot be empty.[/red]")
         return
-
-    username = input("Enter your username (for audit log): ").strip()
-    role = select_authorized_role()
-    if role is None:
-        print("[red]Update cancelled due to invalid role selection.[/red]")
-        return
-
-    # Validate that the username has the selected role
-    with get_conn() as conn:
-        cur = conn.cursor()
-        if not validate_user_role(cur, username, role):
-            print(f"[red]Authorization failed: User '{username}' does not have the role '{role}'.[/red]")
-            cur.close()
-            return
-        cur.close()
 
     justification = input("Enter justification for this change: ").strip() or None
 
@@ -370,8 +469,18 @@ def main():
         elif choice == "8":
             print_department_changes_last_month()
         elif choice == "9":
-            start_ts = input("Enter start timestamp (YYYY-MM-DD HH:MM:SS): ").strip()
-            end_ts = input("Enter end timestamp   (YYYY-MM-DD HH:MM:SS): ").strip()
+            start_input = input("Enter start timestamp (MM-DD-YYYY HH:MM): ").strip()
+            start_ts = parse_timestamp(start_input)
+            if start_ts is None:
+                print("[red]Invalid start timestamp format. Please use MM-DD-YYYY HH:MM[/red]")
+                continue
+
+            end_input = input("Enter end timestamp   (MM-DD-YYYY HH:MM): ").strip()
+            end_ts = parse_timestamp(end_input)
+            if end_ts is None:
+                print("[red]Invalid end timestamp format. Please use MM-DD-YYYY HH:MM[/red]")
+                continue
+
             print_changes_in_range(start_ts, end_ts)
         elif choice == "10":
             try:
