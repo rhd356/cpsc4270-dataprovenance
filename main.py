@@ -8,6 +8,7 @@ from audit import (
     print_salary_changes_last_month,
     print_name_changes_last_month,
     print_department_changes_last_month,
+    print_role_changes_last_month,
     print_changes_in_range,
     print_field_history,
     print_all_changes_for_employee,
@@ -441,17 +442,18 @@ def show_menu():
     print("  6) Show salary changes in the last month")
     print("  7) Show name changes in the last month")
     print("  8) Show department changes in the last month")
-    print("  9) Show all changes in a date range")
-    print("  10) Trace field history")
-    print("  11) Show all changes organized by user")
-    print("  12) Show all changes organized by role")
-    print("  13) Exit")
+    print("  9) Show role changes in the last month")
+    print("  10) Show all changes in a date range")
+    print("  11) Trace field history")
+    print("  12) Show all changes organized by user")
+    print("  13) Show all changes organized by role")
+    print("  14) Exit")
 
 
 def main():
     while True:
         show_menu()
-        choice = input("Choose an option (1-13): ").strip()
+        choice = input("Choose an option (1-14): ").strip()
 
         if choice == "1":
             list_employees()
@@ -470,6 +472,8 @@ def main():
         elif choice == "8":
             print_department_changes_last_month()
         elif choice == "9":
+            print_role_changes_last_month()
+        elif choice == "10":
             start_input = input("Enter start timestamp (MM-DD-YYYY HH:MM): ").strip()
             start_ts = parse_timestamp(start_input)
             if start_ts is None:
@@ -483,7 +487,7 @@ def main():
                 continue
 
             print_changes_in_range(start_ts, end_ts)
-        elif choice == "10":
+        elif choice == "11":
             try:
                 employee_id = int(input("Enter employee ID: ").strip())
                 print("\n[bold cyan]Select trace option:[/bold cyan]")
@@ -501,15 +505,15 @@ def main():
                     print("[red]Invalid option. Please enter 1 or 2.[/red]")
             except ValueError:
                 print("[red]Invalid employee ID.[/red]")
-        elif choice == "11":
-            print_all_changes_by_user()
         elif choice == "12":
-            print_all_changes_by_role()
+            print_all_changes_by_user()
         elif choice == "13":
+            print_all_changes_by_role()
+        elif choice == "14":
             print("[bold green]Goodbye![/bold green]")
             break
         else:
-            print("[red]Invalid option. Please enter 1-13.[/red]")
+            print("[red]Invalid option. Please enter 1-14.[/red]")
 
 
 if __name__ == "__main__":

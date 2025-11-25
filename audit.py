@@ -17,6 +17,7 @@ def get_salary_changes_last_month():
                 new_value   AS new_salary,
                 changed_by,
                 changed_role,
+                justification,
                 changed_at
             FROM audit_log
             WHERE table_name = 'employees'
@@ -31,7 +32,6 @@ def get_salary_changes_last_month():
 
 """ Get all changes between start_time and end_time. """
 def get_changes_in_range(start_time: str, end_time: str):
-    
     with get_conn() as conn:
         cur = conn.cursor(dictionary=True)
         cur.execute(
@@ -62,12 +62,13 @@ def print_salary_changes_last_month():
             r["new_salary"],
             r["changed_by"],
             r["changed_role"],
+            r["justification"] or "N/A",
             r["changed_at"],
         ]
         for r in rows
     ]
     headers = ["Audit ID", "Employee ID", "Old Salary", "New Salary",
-               "Changed By", "Role", "Changed At"]
+               "Changed By", "Role", "Justification", "Changed At"]
     print("[bold cyan]Salary changes in the last month:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
@@ -88,6 +89,7 @@ def print_changes_in_range(start_time: str, end_time: str):
             r["new_value"],
             r["changed_by"],
             r["changed_role"],
+            r["justification"] or "N/A",
             r["changed_at"],
         ]
         for r in rows
@@ -95,7 +97,7 @@ def print_changes_in_range(start_time: str, end_time: str):
     headers = [
         "Audit ID", "Table", "Row ID", "Column",
         "Old Value", "New Value", "Changed By",
-        "Role", "Changed At",
+        "Role", "Justification", "Changed At",
     ]
     print(f"[bold cyan]Changes between {start_time} and {end_time}:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
@@ -113,6 +115,7 @@ def get_name_changes_last_month():
                 new_value   AS new_name,
                 changed_by,
                 changed_role,
+                justification,
                 changed_at
             FROM audit_log
             WHERE table_name = 'employees'
@@ -138,6 +141,7 @@ def get_department_changes_last_month():
                 new_value   AS new_department,
                 changed_by,
                 changed_role,
+                justification,
                 changed_at
             FROM audit_log
             WHERE table_name = 'employees'
@@ -165,12 +169,13 @@ def print_name_changes_last_month():
             r["new_name"],
             r["changed_by"],
             r["changed_role"],
+            r["justification"] or "N/A",
             r["changed_at"],
         ]
         for r in rows
     ]
     headers = ["Audit ID", "Employee ID", "Old Name", "New Name",
-               "Changed By", "Role", "Changed At"]
+               "Changed By", "Role", "Justification", "Changed At"]
     print("[bold cyan]Name changes in the last month:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
@@ -189,13 +194,66 @@ def print_department_changes_last_month():
             r["new_department"],
             r["changed_by"],
             r["changed_role"],
+            r["justification"] or "N/A",
             r["changed_at"],
         ]
         for r in rows
     ]
     headers = ["Audit ID", "Employee ID", "Old Department", "New Department",
-               "Changed By", "Role", "Changed At"]
+               "Changed By", "Role", "Justification", "Changed At"]
     print("[bold cyan]Department changes in the last month:[/bold cyan]")
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+
+
+""" Shows all role changes in the last month """
+def get_role_changes_last_month():
+    with get_conn() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
+            """
+            SELECT
+                audit_id,
+                row_id      AS employee_id,
+                old_value   AS old_role,
+                new_value   AS new_role,
+                changed_by,
+                changed_role,
+                justification,
+                changed_at
+            FROM audit_log
+            WHERE table_name = 'employees'
+              AND column_name = 'role'
+              AND changed_at >= NOW() - INTERVAL 1 MONTH
+            ORDER BY changed_at DESC;
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return rows
+
+
+def print_role_changes_last_month():
+    rows = get_role_changes_last_month()
+    if not rows:
+        print("[yellow]No role changes in the last month.[/yellow]")
+        return
+
+    table = [
+        [
+            r["audit_id"],
+            r["employee_id"],
+            r["old_role"],
+            r["new_role"],
+            r["changed_by"],
+            r["changed_role"],
+            r["justification"] or "N/A",
+            r["changed_at"],
+        ]
+        for r in rows
+    ]
+    headers = ["Audit ID", "Employee ID", "Old Role", "New Role",
+               "Changed By", "Role", "Justification", "Changed At"]
+    print("[bold cyan]Role changes in the last month:[/bold cyan]")
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
